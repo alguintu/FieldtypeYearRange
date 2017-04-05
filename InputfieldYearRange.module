@@ -1,0 +1,121 @@
+<?php
+
+class InputfieldYearRange extends Inputfield {
+
+    public static function getModuleInfo() {
+        return array(
+            'title' => __('YearRange Inputfield', __FILE__), // Module Title
+            'summary' => __('Simple year-range input field.', __FILE__), // Module Summary
+            'version' => 103,
+            'author' => 'Alxndre',
+            'requires' => array("FieldtypeYearRange")
+        );
+    }
+
+    /**
+     * Construct the Inputfield, setting defaults for all properties
+     *
+     */
+    public function __construct() {
+        $this->set('input_suffix','');
+        $this->set('input_width', 100);
+        parent::__construct();
+    }
+
+    /**
+     * Per the Module interface, init() is called when the system is ready for API usage
+     *
+     */
+    public function init() {
+        return parent::init();
+    }
+
+    /**
+     * Return the completed output of this Inputfield, ready for insertion in an XHTML form
+     *
+     * @return string
+     *
+     */
+    public function ___render() {
+
+        $out = '';
+        $value = $this->attr('value') ? $this->attr('value') : new Dimension();
+
+        $label_width = $this->_("From");
+        $label_height = $this->_("To");
+
+        $out .= "<div class='dimension_col'>";
+        $out .= "<label>{$label_width}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_from' id='Inputfield_{$this->name}_from' value='{$value->width}'/> {$this->input_suffix}</label>";
+        $out .= "</div>";
+
+        $out .= "<div class='dimension_col'>";
+        $out .= "<label>{$label_height}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_to' id='Inputfield_{$this->name}_to' value='{$value->height}'/> {$this->input_suffix}</label>";
+        $out .= "</div>";
+
+        return $out;
+    }
+
+    /**
+     * Process the input from the given WireInputData (usually $input->get or $input->post), load and clean the value for use in this Inputfield.
+     *
+     * @param WireInputData $input
+     * @return $this
+     *
+     */
+    public function ___processInput(WireInputData $input) {
+
+        $name = $this->attr('name');
+        $value = $this->attr('value');
+
+        $dim_names = array(
+                'from' => $name . "_from",
+                'to' => $name . "_to",
+            );
+
+        // loop all inputs and set them if changed
+        foreach($dim_names as $key => $name) {
+            if(isset($input->$name)) {
+                if($value->$key != $input->$name) {
+                    if(!is_numeric($input->$name) && !empty($input->$name)) {
+                        // in case the input isn't numeric show an error
+                        $this->error($this->_("Field only accepts integers (int) values"));
+                    } else {
+                        $value->set($key, (int) $input->$name);
+                        $this->trackChange('value');
+                    }
+
+                }
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Get any custom configuration fields for this Inputfield
+     *
+     * @return InputfieldWrapper
+     *
+     */
+    public function ___getConfigInputfields() {
+        $inputfields = parent::___getConfigInputfields();
+
+        $f = $this->modules->get('InputfieldInteger');
+        $f->attr('name', 'input_width');
+        $f->label = 'Input width';
+        $f->attr('value', $this->input_width ? $this->input_width : 100 );
+        $f->attr('size', 10);
+        $f->description = 'Width of the inputs in pixels.';
+        $inputfields->append($f);
+
+        $f = $this->modules->get('InputfieldText');
+        $f->attr('name', 'input_suffix');
+        $f->label = 'Input Suffix';
+        $f->attr('value', strlen($this->input_suffix) ? $this->input_suffix : '' );
+        $f->attr('size', 10);
+        $f->description = 'Suffix to append to each of the three inputs.';
+        $inputfields->append($f);
+
+        return $inputfields;
+    }
+
+}

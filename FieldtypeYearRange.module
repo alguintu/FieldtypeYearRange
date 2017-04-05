@@ -1,0 +1,172 @@
+<?php
+
+class FieldtypeYearRange extends Fieldtype {
+
+    public static function getModuleInfo() {
+        return array(
+            'title' => __('YearRange', __FILE__), // Module Title
+            'summary' => __('Field that stores 2 integer values for year from and year to', __FILE__), // Module Summary
+            'version' => 100,
+            'author' => 'Alxndre',
+            'installs' => 'InputfieldYearRange'
+        );
+    }
+
+    /**
+     * Format value for output
+     *
+     */
+    public function ___formatValue(Page $page, Field $field, $value) {
+        return $value;
+    }
+
+    /**
+     *
+     * Add mapping to different name for use in page selectors
+     * This enables us to use it like "field.width=100, field.height<=200, field.depth>100"
+     */
+    public function getMatchQuery($query, $table, $subfield, $operator, $value) {
+        if($subfield == 'from') $subfield = 'data';
+        if($subfield == 'to') $subfield = 'data_to';
+        return parent::getMatchQuery($query, $table, $subfield, $operator, $value);
+    }
+
+    /**
+     * get Inputfield for this fieldtype, set config attributes so they can be used in the inputfield
+     *
+     */
+    public function getInputfield(Page $page, Field $field) {
+        $dim = $this->modules->get('InputfieldYearRange');
+        return $dim;
+    }
+
+    /**
+     * there's none compatible
+     *
+     */
+    public function ___getCompatibleFieldtypes(Field $field) {
+        return null;
+    }
+
+    /**
+     * blank value is an WireData object Dimension
+     *
+     */
+    public function getBlankValue(Page $page, Field $field) {
+        return new YearRange();
+    }
+
+    /**
+     * Any value will get sanitized before setting it to a page object
+     * and before saving the data
+     *
+     * If value not of instance Dimension return empty instance
+     */
+    public function sanitizeValue(Page $page, Field $field, $value) {
+
+        if(!$value instanceof YearRange) $value = $this->getBlankValue($page, $field);
+
+        // report any changes to the field values
+        if($value->isChanged('from')|| $value->isChanged('to')){
+	    $page->trackChange($field->name);
+        }
+
+        return $value;
+    }
+
+    /**
+     * get values converted when fetched from db
+     *
+     */
+    public function ___wakeupValue(Page $page, Field $field, $value) {
+        // get blank yr
+        $yearRange = $this->getBlankValue($page, $field);
+
+        // populate the yr
+        $yearRange->width = (int) $value['data'];
+        $yearRange->height = (int) $value['data_to'];
+
+        return $yearRange;
+    }
+
+    /**
+     * return converted from object to array for storing in database
+     *
+     */
+    public function ___sleepValue(Page $page, Field $field, $value) {
+
+        // throw error if value is not of the right type
+        if(!$value instanceof YearRange)
+            throw new WireException("Expecting an instance of YearRange");
+
+        $sleepValue = array(
+            'data' => (int) $value->from,
+            'data_to' => (int) $value->to,
+            );
+
+        return $sleepValue;
+    }
+
+    /**
+     * Get the database schema for this field
+     *
+     * @param Field $field In case it's needed for the schema, but usually should not.
+     * @return array
+     */
+    public function getDatabaseSchema(Field $field) {
+
+        $schema = parent::getDatabaseSchema($field);
+        $schema['data'] = 'int NOT NULL default 0';
+        $schema['data_to'] = 'int NOT NULL default 0';
+        // key for data will already be added from the parent
+        $schema['keys']['data_to'] = 'KEY data_to(data_to)';
+        return $schema;
+    }
+
+    /**
+     * Get any inputfields used for configuration of this Fieldtype.
+     *
+     * This is in addition any configuration fields supplied by the parent Inputfield.
+     *
+     * @param Field $field
+     * @return InputfieldWrapper
+     *
+     */
+    public function ___getConfigInputfields(Field $field) {
+        $inputfields = parent::___getConfigInputfields($field);
+        // nothing yet
+        return $inputfields;
+    }
+
+}
+
+
+/**
+ * Helper WireData Class to hold a dimension object
+ *
+ */
+class YearRange extends WireData {
+
+    public function __construct() {
+        $this->set('from', null);
+        $this->set('to', null);
+    }
+
+    public function set($key, $value) {
+
+        if($key == 'from' || $key == 'to') {
+            // if value isn't numeric, don't change the value if already
+            // one set, else set it to 0 and throw an exception so it can be seen on API usage
+            if(!is_int($value) && !is_null($value)) {
+                $value = $this->$key ? $this->$key : 0;
+                throw new WireException("YearRange only accepts integer (int) values");
+            }
+        }
+        return parent::set($key, $value);
+    }
+
+    public function get($key) {
+        return parent::get($key);
+    }
+
+}
