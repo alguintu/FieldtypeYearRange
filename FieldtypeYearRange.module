@@ -83,8 +83,8 @@ class FieldtypeYearRange extends Fieldtype {
         $yearRange = $this->getBlankValue($page, $field);
 
         // populate the yr
-        $yearRange->width = (int) $value['data'];
-        $yearRange->height = (int) $value['data_to'];
+        $yearRange->from = (int) $value['data'];
+        $yearRange->to = (int) $value['data_to'];
 
         return $yearRange;
     }

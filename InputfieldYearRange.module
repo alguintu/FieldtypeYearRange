@@ -41,15 +41,15 @@ class InputfieldYearRange extends Inputfield {
         $out = '';
         $value = $this->attr('value') ? $this->attr('value') : new Dimension();
 
-        $label_width = $this->_("From");
-        $label_height = $this->_("To");
+        $label_from = $this->_("From");
+        $label_to = $this->_("To");
 
         $out .= "<div class='dimension_col'>";
-        $out .= "<label>{$label_width}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_from' id='Inputfield_{$this->name}_from' value='{$value->width}'/> {$this->input_suffix}</label>";
+        $out .= "<label>{$label_from}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_from' id='Inputfield_{$this->name}_from' value='{$value->from}'/> {$this->input_suffix}</label>";
         $out .= "</div>";
 
         $out .= "<div class='dimension_col'>";
-        $out .= "<label>{$label_height}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_to' id='Inputfield_{$this->name}_to' value='{$value->height}'/> {$this->input_suffix}</label>";
+        $out .= "<label>{$label_to}: <input type='number' min='0' max='9999' style='width:{$this->input_width}px' name='{$this->name}_to' id='Inputfield_{$this->name}_to' value='{$value->to}'/> {$this->input_suffix}</label>";
         $out .= "</div>";
 
         return $out;
